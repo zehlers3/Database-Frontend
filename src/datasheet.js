@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import Select from 'react-select'; 
-import './datasheet.css';
+import './datasheet.css'; 
 
 const Datasheet= () => {
   const [methods, setMethods] = useState([{ method: '', runs: '', testLocations: '' }]);
@@ -97,10 +97,20 @@ const Datasheet= () => {
 
   const submitForm = () => {
     const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet();
+    const sheetData = [
+      ['Client Name', formData.clientName],
+      ['Project Number', formData.projectNumber],
+      ['Location', formData.location],
+      ['Start Date', formData.startDate],
+      ...methods.map((method, index) => [
+        `Method`, method.method, method.runs, method.testLocations
+      ])
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
     XLSX.writeFile(workbook, 'datasheet.xlsx');
   };
+
 
   return (
     <div className="form-container">
