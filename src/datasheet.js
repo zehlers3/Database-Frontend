@@ -1,9 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import * as XLSX from 'xlsx';
-import Select from 'react-select'; 
-import './datasheet.css'; 
+import Select from 'react-select';
+import './datasheet.css';
 
-const Datasheet= () => {
+const MethodForm = ({ method, index, methodOptions, handleMethodChange, handleInputChange, removeMethod }) => (
+  <div className="method-group" key={index}>
+    <Select
+      placeholder="Select a method"
+      value={methodOptions.find(option => option.value === method.method)}
+      onChange={(option) => handleMethodChange(option, index)}
+      options={methodOptions}
+      isSearchable={true}
+      className="method-select"
+    />
+    <input
+      type="number"
+      name="runs"
+      placeholder="Number of runs"
+      value={method.runs}
+      onChange={(e) => handleInputChange(e, index, 'runs')}
+      className="method-input"
+    />
+    <input
+      type="number"
+      name="testLocations"
+      placeholder="Number of test locations"
+      value={method.testLocations}
+      onChange={(e) => handleInputChange(e, index, 'testLocations')}
+      className="method-input"
+    />
+    <button type="button" onClick={() => removeMethod(index)} className="remove-method-btn">Remove Method</button>
+  </div>
+);
+
+const Datasheet = () => {
   const [methods, setMethods] = useState([{ method: '', runs: '', testLocations: '' }]);
   const [formData, setFormData] = useState({
     clientName: '',
@@ -11,7 +41,6 @@ const Datasheet= () => {
     location: '',
     startDate: '',
   });
-
 
   const methodOptions = [
     { value: 'Carb Method 501', label: 'Carb Method 501' },
@@ -71,46 +100,51 @@ const Datasheet= () => {
     { value: '(ALT-010)', label: '(ALT-010)'},
     { value: '(ALT-043)', label: '(ALT-043)'},
   ];
-  const handleInputChange = (e) => {
+
+  const handleInputChange = (e, index, field) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    let finalValue = value;
+
+    if (field === 'runs' || field === 'testLocations') {
+      finalValue = Math.max(0, Number(value)); 
+    }
+  
+    if (index !== undefined) {
+      const updatedMethods = methods.map((method, i) => i === index ? { ...method, [field]: finalValue } : method);
+      setMethods(updatedMethods);
+    } else {
+      setFormData({ ...formData, [name]: finalValue });
+    }
   };
 
   const handleMethodChange = (selectedOption, index) => {
-    const updatedMethods = methods.map((method, i) => {
-      if (i === index) {
-        return { ...method, method: selectedOption.value };
-      }
-      return method;
-    });
+    const updatedMethods = methods.map((method, i) => i === index ? { ...method, method: selectedOption.value } : method);
     setMethods(updatedMethods);
   };
-  
 
-  const addMethod = () => {
-    setMethods([...methods, { method: '', runs: '', testLocations: '' }]);
-  };
+  const addMethod = () => setMethods([...methods, { method: '', runs: '', testLocations: '' }]);
 
-  const removeMethod = (index) => {
-    setMethods(methods.filter((_, i) => i !== index));
-  };
+  const removeMethod = (index) => setMethods(methods.filter((_, i) => i !== index));
 
   const submitForm = () => {
-    const workbook = XLSX.utils.book_new();
-    const sheetData = [
-      ['Client Name', formData.clientName],
-      ['Project Number', formData.projectNumber],
-      ['Location', formData.location],
-      ['Start Date', formData.startDate],
-      ...methods.map((method, index) => [
-        `Method`, method.method, method.runs, method.testLocations
-      ])
-    ];
-    const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, 'datasheet.xlsx');
+    try {
+      const workbook = XLSX.utils.book_new();
+      const sheetData = [
+        ['Client Name', formData.clientName],
+        ['Project Number', formData.projectNumber],
+        ['Location', formData.location],
+        ['Start Date', formData.startDate],
+        ...methods.map((method, index) => [
+          `Method`, method.method, method.runs, method.testLocations
+        ])
+      ];
+      const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      XLSX.writeFile(workbook, 'datasheet.xlsx');
+    } catch (error) {
+      console.error('Error creating datasheet:', error);
+    }
   };
-
 
   return (
     <div className="form-container">
@@ -158,53 +192,26 @@ const Datasheet= () => {
             />
           </div>
         </div>
-  
+
         <div id="methods">
           {methods.map((method, index) => (
-            <div className="method-group" key={index}>
-              <Select
-                placeholder="Select a method"
-                value={methodOptions.find(option => option.value === method.method)}
-                onChange={(option) => handleMethodChange(option, index)}
-                options={methodOptions}
-                isSearchable={true}
-                className="method-select"
-              />
-              <input
-                type="number"
-                name="runs"
-                placeholder="Number of runs"
-                value={method.runs}
-                onChange={(e) => {
-                  const updatedMethods = methods.map((m, i) => 
-                    i === index ? { ...m, runs: e.target.value } : m
-                  );
-                  setMethods(updatedMethods);
-                }}
-              />
-              <input
-                type="number"
-                name="testLocations"
-                placeholder="Number of test locations"
-                value={method.testLocations}
-                onChange={(e) => {
-                  const updatedMethods = methods.map((m, i) => 
-                    i === index ? { ...m, testLocations: e.target.value } : m
-                  );
-                  setMethods(updatedMethods);
-                }}
-              />
-              <button type="button" onClick={() => removeMethod(index)} className="remove-method-btn">Remove Method</button>
-            </div>
+            <MethodForm
+              key={index}
+              index={index}
+              method={method}
+              methodOptions={methodOptions}
+              handleMethodChange={handleMethodChange}
+              handleInputChange={handleInputChange}
+              removeMethod={removeMethod}
+            />
           ))}
         </div>
-        
-        <button type="button" onClick={addMethod} className="add-method-btn">Add Another Method</button><br /><br />
-        <button type="button" onClick={submitForm} className="submit-btn">Create Datasheet</button>
+
+        <button type="button" onClick={addMethod} className="primary-btn">Add Another Method</button><br /><br />
+        <button type="button" onClick={submitForm} className="primary-btn">Create Datasheet</button>
       </form>
     </div>
-  );  
+  );
 };
-
 
 export default Datasheet;
