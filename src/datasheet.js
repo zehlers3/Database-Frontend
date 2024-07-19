@@ -39,6 +39,7 @@ const Datasheet = () => {
     clientName: '',
     projectNumber: '',
     location: '',
+    simultaneousTestRuns: '',
     startDate: '',
   });
 
@@ -105,7 +106,7 @@ const Datasheet = () => {
     const { name, value } = e.target;
     let finalValue = value;
 
-    if (field === 'runs' || field === 'testLocations') {
+    if (field === 'runs' || field === 'testLocations' || name === 'simultaneousTestRuns') {
       finalValue = Math.max(0, Number(value)); 
     }
   
@@ -133,6 +134,7 @@ const Datasheet = () => {
         ['Client Name', formData.clientName],
         ['Project Number', formData.projectNumber],
         ['Location', formData.location],
+        ['Simultaneous Test Runs', formData.simultaneousTestRuns],
         ['Start Date', formData.startDate],
         ...methods.map((method, index) => [
           `Method`, method.method, method.runs, method.testLocations
@@ -148,7 +150,7 @@ const Datasheet = () => {
 
   return (
     <div className="form-container">
-      <h2>Datasheet Input Form</h2>
+      <h2>Project Input Form</h2>
       <form>
         <div className="label-group">
           <div>
@@ -181,15 +183,19 @@ const Datasheet = () => {
               onChange={handleInputChange}
             />
           </div>
-          <div>
-            <label htmlFor="startDate">Start Date:</label><br />
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleInputChange}
-            />
+          <div className="double-input">
+            <div>
+            </div>
+            <div>
+              <label htmlFor="startDate">Start Date:</label><br />
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -207,8 +213,8 @@ const Datasheet = () => {
           ))}
         </div>
 
-        <button type="button" onClick={addMethod} className="primary-btn">Add Another Method</button><br /><br />
-        <button type="button" onClick={submitForm} className="primary-btn">Create Datasheet</button>
+        <button type="button" onClick={addMethod} className="primary-btn">Add Method</button><br /><br />
+        <button type="button" onClick={null} className="primary-btn">Create Datasheet</button>
       </form>
     </div>
   );
